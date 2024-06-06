@@ -1,0 +1,20 @@
+User with IP address :localhost accessed confidential information in database 
+database name : data1
+table : karim
+columns : [col2,]
+
+User with IP address :localhost accessed confidential information in database 
+database name : data1
+table : karim
+columns : [col1,]
+
+User with IP address :localhost accessed confidential information in database 
+database name : data1
+table : karim
+columns : [col1,col2,]
+
+User with IP address :localhost accessed confidential information in database 
+database name : data1
+table : karim
+columns : [col1,col2,]
+
