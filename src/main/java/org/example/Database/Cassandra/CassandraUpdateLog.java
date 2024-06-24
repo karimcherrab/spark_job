@@ -30,7 +30,6 @@ public class CassandraUpdateLog extends Database {
         if (m.find()) {
             String tableName = m.group(1);
             result.add(new Tuple2<>("table_name_extract", tableName));
-            System.out.println("table name: " + tableName);
         }
 
         return sc.parallelize(result);
@@ -68,10 +67,9 @@ public class CassandraUpdateLog extends Database {
             }
         }
 
-        System.out.println("cols");
-        for (String a : columns){
-            System.out.println(a);
-        }
+//        for (String a : columns){
+//            System.out.println(a);
+//        }
 
         return sc.parallelize(columns);
     }

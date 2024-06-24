@@ -3,54 +3,62 @@ package org.example;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.config.ConfigResource;
+import org.example.Kafka.Producer;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class Main {
-    static String topic  = "postgress3";
+    static String topic  = "postgress";
     static String bootstrapServers  = "localhost:9093";
-
+    static String log = "2023-09-27 00:10:34.874 UTC,\"devops\",\"manage_display_prod\",34150,\"172.16.60.101:59384\",65136c12.8566,3,\"SELECT\",2023-09-26 23:41:06 UTC,60/24801198,0,LOG,00000,\"execute S_5: select offer0_.offer_id as offer_id1_6_, offer0_.offer_code as offer_co2_6_, offer0_.offer_name as offer_na3_6_, offer0_.position as position4_6_, offer0_.price as price5_6_, offer0_.type_id as type_id6_6_, offer0_.validity_id as validity7_6_ from offer offer0_\",,,,,,,,,\"PostgreSQL JDBC Driver\",\"client backend\"";
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 
+//
+//        Producer producer = new Producer(bootstrapServers , topic);
+//        producer.send(log);
 
 
-        Data data = new Data();
-        List<Map<String, Object>> jobs = data.get_jobs();
-        System.out.println(jobs);
-        for (Map<String, Object> job : jobs) {
-            System.out.println("Job ID: " + job.get("id"));
-            System.out.println("Job Name: " + job.get("name"));
-            System.out.println("Is Active: " + job.get("is_active"));
-            System.out.println("Created At: " + job.get("created_at"));
 
-            // Print databases
-            List<Map<String, Object>> databases = (List<Map<String, Object>>) job.get("databases");
-            for (Map<String, Object> database : databases) {
-                System.out.println("\tDatabase ID: " + database.get("database_id"));
-                System.out.println("\tDatabase Name: " + database.get("database_name"));
 
-                // Print tables
-                List<Map<String, Object>> tables = (List<Map<String, Object>>) database.get("tables");
-                for (Map<String, Object> table : tables) {
-                    System.out.println("\t\tTable ID: " + table.get("table_id"));
-                    System.out.println("\t\tTable Name: " + table.get("table_name"));
 
-                    // Print columns
-                    List<Map<String, Object>> columns = (List<Map<String, Object>>) table.get("columns");
-                    for (Map<String, Object> column : columns) {
-                        System.out.println("\t\t\tColumn Name: " + column.get("column_name"));
-                    }
-                }
-            }
-
-            // Print conf data
-            Map<String, Object> conf = (Map<String, Object>) job.get("conf");
-            System.out.println("Conf ID: " + conf.get("id"));
-            System.out.println("Date Start: " + conf.get("date_start"));
-            System.out.println("Date End: " + conf.get("date_end"));
-            System.out.println("Time: " + conf.get("time"));
+//
+//        Data data = new Data();
+//        List<Map<String, Object>> jobs = data.get_jobs();
+//        System.out.println(jobs);
+//        for (Map<String, Object> job : jobs) {
+//            System.out.println("Job ID: " + job.get("id"));
+//            System.out.println("Job Name: " + job.get("name"));
+//            System.out.println("Is Active: " + job.get("is_active"));
+//            System.out.println("Created At: " + job.get("created_at"));
+//
+//            // Print databases
+//            List<Map<String, Object>> databases = (List<Map<String, Object>>) job.get("databases");
+//            for (Map<String, Object> database : databases) {
+//                System.out.println("\tDatabase ID: " + database.get("database_id"));
+//                System.out.println("\tDatabase Name: " + database.get("database_name"));
+//
+//                // Print tables
+//                List<Map<String, Object>> tables = (List<Map<String, Object>>) database.get("tables");
+//                for (Map<String, Object> table : tables) {
+//                    System.out.println("\t\tTable ID: " + table.get("table_id"));
+//                    System.out.println("\t\tTable Name: " + table.get("table_name"));
+//
+//                    // Print columns
+//                    List<Map<String, Object>> columns = (List<Map<String, Object>>) table.get("columns");
+//                    for (Map<String, Object> column : columns) {
+//                        System.out.println("\t\t\tColumn Name: " + column.get("column_name"));
+//                    }
+//                }
+//            }
+//
+//            // Print conf data
+//            Map<String, Object> conf = (Map<String, Object>) job.get("conf");
+//            System.out.println("Conf ID: " + conf.get("id"));
+//            System.out.println("Date Start: " + conf.get("date_start"));
+//            System.out.println("Date End: " + conf.get("date_end"));
+//            System.out.println("Time: " + conf.get("time"));
         }
 
 //        for (int i = 0 ; i<jobs.size() ; i ++ ){
@@ -219,7 +227,7 @@ public class Main {
 
 
 
-    }
+
 
 
 

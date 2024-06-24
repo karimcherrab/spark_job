@@ -41,7 +41,6 @@ public class CassandraInsertLog  extends Database{
             result = List.of(
                     new Tuple2<>("table_name_extract", m.group(1))
             );
-            System.out.println("table = " +  m.group(1));
 
         }
 
@@ -69,7 +68,6 @@ public class CassandraInsertLog  extends Database{
                     String fieldName = keyValue[0].trim();
                     // Remove leading and trailing whitespaces and quotes if present
                     fieldName = fieldName.replaceAll("^\"|\"$", "");
-                    System.out.println(fieldName);
                     columnList.add(fieldName);
                 }
             } catch (Exception e) {

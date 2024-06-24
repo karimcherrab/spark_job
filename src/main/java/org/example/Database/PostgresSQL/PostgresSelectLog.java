@@ -32,12 +32,12 @@ public class PostgresSelectLog extends Database {
 
         if (m.find()) {
 
-
             result = Arrays.asList(
                     new Tuple2<>("table_name_extract", m.group(1)),
                     new Tuple2<>("table_alias_extract", m.group(2))
             );
         }
+
 
         return sc.parallelize(result);
     }

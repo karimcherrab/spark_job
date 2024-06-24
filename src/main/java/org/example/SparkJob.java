@@ -1,139 +1,108 @@
 package org.example;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.api.java.JavaInputDStream;
-import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import org.apache.spark.streaming.kafka010.*;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.example.Database.Cassandra.Cassandra;
+import org.example.Database.DatabaseType;
 import org.example.Database.PostgresSQL.PostgresSQL;
-import org.example.Kafka.Consumer;
-import org.example.Kafka.ConsumerThread;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.io.Serializable;
-import java.util.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SparkJob implements Job, Serializable {
-    int[] index = {2, 4, 7, 13};
+public class SparkJob implements Job {
+    private static final Map<Integer, AtomicBoolean> jobStopFlags = new HashMap<>();
+    private int[] index = {5};
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        // Get job details from context
+        Map<String, Object> job = (Map<String, Object>) context.getJobDetail().getJobDataMap().get("job_spark");
+        String bootstrapServers = (String) context.getJobDetail().getJobDataMap().get("bootstrapServers");
+        String timeEnd = (String) context.getJobDetail().getJobDataMap().get("timeEnd");
+        String dateEnd = (String) context.getJobDetail().getJobDataMap().get("dateEnd");
+
+        // Initialize stop flag for this job
+        int jobId = (int) job.get("id");
+        AtomicBoolean stopFlag = new AtomicBoolean(false);
+        jobStopFlags.put(jobId, stopFlag);
+
+        // Start Kafka consumer
+        startKafkaConsumerForJob(job, bootstrapServers, dateEnd, timeEnd, stopFlag);
+    }
+
+    private void startKafkaConsumerForJob(Map<String, Object> job, String bootstrapServers,
+                                          String dateEnd, String timeEnd, AtomicBoolean stopFlag) {
+        new Thread(() -> {
+            String groupId = "consumer_group_" + job.get("id");
+            String topic = (String) job.get("type");
+            System.out.println("topic = " +topic);
+            Properties props = new Properties();
+            props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+            props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+            props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+            props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+            props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+            KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+            consumer.subscribe(Collections.singletonList(topic));
+
+            DatabaseType databaseType ;
+
+            if (topic.equals("postgress")){
+                databaseType = new PostgresSQL(job);
+                index = new int[]{2, 4, 7, 13};
+
+            }else {
+                databaseType = new Cassandra(job);
+                index = new int[]{5, 7};
 
 
-        System.out.println("Current system time when job starts: " + new Date());
-//
-//
-//        SparkConf conf = new SparkConf()
-//                .setAppName("logs")
-//                .setMaster("local[*]");
-//        Map<String, Object> job = (Map<String, Object>) context.getMergedJobDataMap().get("job_spark");
-//        String bootstrapServers = context.getMergedJobDataMap().getString("bootstrapServers");
-////        String topic = job.get("type");
-//        String topic = "postgress";
-//
-//        JavaSparkContext sc = new JavaSparkContext(conf);
-//
-//
-//
-//
-//            String groupId1 = "group-" + job.get("id") + "-1";
-//            Consumer consumer1 = new Consumer(topic, bootstrapServers, groupId1);
-//            ConsumerThread consumerThread1 = new ConsumerThread(consumer1, sc, job);
-//            Thread thread1 = new Thread(consumerThread1);
-//            thread1.start();
-//
-//            String groupId2 = "group-" + job.getId() + "-2";
-//            Consumer consumer2 = new Consumer(topic, bootstrapServers, groupId2);
-//            ConsumerThread consumerThread2 = new ConsumerThread(consumer2, sc, job);
-//            Thread thread2 = new Thread(consumerThread2);
-//            thread2.start();
+            }
 
 
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        // Create and start second consumer thread
+            LocalDateTime endDateTime = LocalDateTime.parse(dateEnd.substring(0 , 10) + " " + timeEnd, dateTimeFormatter);
 
-
-//        String groupId = "group-" + job.getId();
-//        Consumer consumer1 = new Consumer(topic, bootstrapServers, groupId);
-//        ConsumerThread consumerThread1 = new ConsumerThread(consumer1, sc, job);
-//        Thread thread1 = new Thread(consumerThread1);
-//        thread1.start();
-
-
-
-
-        // Start Consumer with the unique groupId
-//        Consumer consumer = new Consumer(topic, bootstrapServers, groupId);
-//        new Thread(() -> consumer.start(sc, job)).start();
-
-//
-//            Consumer consumer  = new Consumer(topic,bootstrapServers);
-//            consumer.start(sc , job);
-
-        // Fetching job details from context
-
-        SparkConf conf = new SparkConf()
-                .setAppName("logs")
-                .setMaster("local[*]");
-
-        try {
-            JavaStreamingContext streamingContext = new JavaStreamingContext(conf, Durations.seconds(2));
-        Map<String, Object> job = (Map<String, Object>) context.getMergedJobDataMap().get("job_spark");
-            String topic = "postgress";
-            String bootstrapServers = context.getMergedJobDataMap().getString("bootstrapServers");
-            JavaSparkContext sc = streamingContext.sparkContext();
-
-            System.out.println("JavaStreamingContext initialized successfully");
-
-            Map<String, Object> kafkaParams = new HashMap<>();
-            kafkaParams.put("bootstrap.servers", bootstrapServers);
-            kafkaParams.put("key.deserializer", StringDeserializer.class.getName());
-            kafkaParams.put("value.deserializer", StringDeserializer.class.getName());
-            kafkaParams.put("group.id", "group1");
-            kafkaParams.put("enable.auto.commit", "true");
-            kafkaParams.put("auto.commit.interval.ms", "1000");
-            kafkaParams.put("auto.offset.reset", "latest");
-
-            Collection<String> topics = Arrays.asList(topic);
-
-            JavaInputDStream<ConsumerRecord<String, String>> stream =
-                    KafkaUtils.createDirectStream(
-                            streamingContext,
-                            LocationStrategies.PreferConsistent(),
-                            ConsumerStrategies.Subscribe(topics, kafkaParams)
-                    );
-            PostgresSQL postgresSQL = new PostgresSQL(sc, job);
-
-
-            // Processing each RDD partition
-            stream.foreachRDD(rdd -> {
-                rdd.foreachPartition(records -> {
-
-
-                    while (records.hasNext()) {
-                        ConsumerRecord<String, String> record = records.next();
-                        System.out.println("Received message: " + record.value());
-//                        postgresSQL.convertLogToRDD(index, record.value());
+            try {
+                while (!stopFlag.get() && LocalDateTime.now().isBefore(endDateTime)) {
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+                    for (ConsumerRecord<String, String> record : records) {
+                        if (stopFlag.get()) {
+                            break;
+                        }
+                        System.out.printf("Consumed record with key %s and value %s, from topic %s%n",
+                                record.key(), record.value(), record.topic());
+                         databaseType.convertLogToRDD(index, record.value());
                     }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                consumer.close();
+                System.out.println("Kafka consumer stopped.");
+            }
+        }).start();
+    }
 
-
-                });
-            });
-
-            streamingContext.start();
-            streamingContext.awaitTermination();
-
-            System.out.println("Job completed: " );
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new JobExecutionException("Error initializing JavaStreamingContext", e);
+    public static void stopJob(int jobId) {
+        AtomicBoolean stopFlag = jobStopFlags.get(jobId);
+        if (stopFlag != null) {
+            stopFlag.set(true);
         }
     }
 }

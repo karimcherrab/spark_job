@@ -6,6 +6,7 @@ import org.example.Database.Database;
 import org.example.Database.DatabaseType;
 import org.example.Database.PostgresSQL.PostgresInsertLog;
 import org.example.Database.PostgresSQL.PostgresSelectLog;
+import org.example.Database.SparkInstant;
 import org.example.Database.Treatment;
 import org.example.Job;
 import scala.Tuple2;
@@ -18,19 +19,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public  class Cassandra implements DatabaseType {
-    JavaSparkContext sc ;
-    Map<String, Object> job;
+    transient JavaSparkContext sc ;
+    private  Map<String, Object> job;
 
-    String log;
+    private  String log;
 
-    int[] index = {5};
 
-    JavaRDD<Tuple2<String, String>> rdd_log  ;
-    public Cassandra(JavaSparkContext sc,Map<String, Object> job, String log) {
-        this.sc = sc;
+    private JavaRDD<Tuple2<String, String>> rdd_log = null;
+    public Cassandra(Map<String, Object> job) {
         this.job = job;
-        this.log = log;
-        rdd_log = convertLogToRDD(index , log);
+        sc = SparkInstant.getInstant_spark();
     }
 
 
@@ -42,15 +40,14 @@ public  class Cassandra implements DatabaseType {
 
 //                String client_address = parts[index[1]].replaceAll("\"", "");
 
-                String query_event = parts[index[0]].replaceAll("\"", "");
-                System.out.println(query_event);
+                String client_address = parts[index[0]].replaceAll("\"", "");
+                String query_event = parts[index[1]].replaceAll("\"", "");
 
                  String command_tag = extract_comment_teg(query_event);
-            String database_name = extractDatabaseName(query_event);
-
+                 String database_name = extractDatabaseName(query_event);
                 List<Tuple2<String, String>> keyValuePairs = Arrays.asList(
                         new Tuple2<>("Database", database_name),
-                        new Tuple2<>("ClientAddress", "localhost"),
+                        new Tuple2<>("ClientAddress", client_address),
                         new Tuple2<>("CommandTag", command_tag),
                         new Tuple2<>("QueryEvent", query_event)
                 );
@@ -74,18 +71,23 @@ public  class Cassandra implements DatabaseType {
         Database database = null;
 
         if ("SELECT".equals(commandTag)) {
-            System.out.println("SelectLog");
+//            String database_name_log = rdd_log.filter(tuple -> "Database".equals(tuple._1())).map(Tuple2::_2).first();
+//
+//            System.out.println(database_name_log);
             database = new CassandraSelectLog(sc);
+            Treatment treatment = new Treatment(rdd_log , job);
+            treatment.start(database);
         } else if ("INSERT".equals(commandTag)) {
             database = new CassandraInsertLog(sc);
+            Treatment treatment = new Treatment(rdd_log , job);
+            treatment.start(database);
         } else if ("UPDATE".equals(commandTag)) {
             database = new CassandraUpdateLog(sc);
-        }
-
-        if (database != null) {
             Treatment treatment = new Treatment(rdd_log , job);
             treatment.start(database);
         }
+
+
     }
 
 
@@ -101,21 +103,46 @@ public  class Cassandra implements DatabaseType {
         if (matcher.find()) {
              queryType = matcher.group(1);
         }
-        System.out.println(queryType);
 
         return queryType;
     }
 
 
+
+
     public static String extractDatabaseName(String logLine) {
         String dbName = "";
-        Pattern dbPattern = Pattern.compile("INSERT INTO ([^\\.]+)\\.");
-        Matcher dbMatcher = dbPattern.matcher(logLine);
-        if (dbMatcher.find()) {
-            dbName = dbMatcher.group(1);
-        }
-        System.out.println("database = " + dbName);
-        return "data1";
-    }
 
+        // Pattern to extract keyspace name from 'logged keyspace' logs
+        String keyspaceRegex = "logged keyspace\\s+'([a-zA-Z0-9_]+)'";
+        Pattern keyspacePattern = Pattern.compile(keyspaceRegex, Pattern.CASE_INSENSITIVE);
+
+        // Pattern to extract database name from 'INSERT INTO' logs
+        String insertIntoRegex = "INSERT INTO ([^\\.]+)\\.";
+
+        Pattern insertIntoPattern = Pattern.compile(insertIntoRegex, Pattern.CASE_INSENSITIVE);
+        Matcher insertIntoMatcher = insertIntoPattern.matcher(logLine);
+        if (insertIntoMatcher.find()) {
+
+            dbName = insertIntoMatcher.group(1);
+
+        }else {
+            // If keyspace pattern does not match, check against insert into pattern
+            Matcher keyspaceMatcher = keyspacePattern.matcher(logLine);
+            if (keyspaceMatcher.find()) {
+                dbName = keyspaceMatcher.group(1);
+            }
+
+        }
+
+
+        return dbName;
+    }
 }
+
+
+
+
+
+
+

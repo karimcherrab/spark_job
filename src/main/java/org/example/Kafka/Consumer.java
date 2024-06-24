@@ -37,7 +37,7 @@ public class Consumer {
 
         PostgresSQL postgresSQL = null;
 //        if (job.getType_database().equals("postgress")) {
-            postgresSQL = new PostgresSQL(sc, job);
+            postgresSQL = new PostgresSQL( job);
 //        }
 
 

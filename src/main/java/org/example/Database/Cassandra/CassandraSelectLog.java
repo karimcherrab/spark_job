@@ -26,20 +26,36 @@ public class CassandraSelectLog extends Database {
     public JavaRDD<Tuple2<String, String>> extractTableName(String sqlQuery) {
         List<Tuple2<String, String>> result = new ArrayList<>();
 
-        // Regular expression pattern to match table names with optional alias
-        String pattern = "\\b(?:FROM|JOIN)\\s+([\\w.]+)(?:\\s+AS\\s+(\\w+))?\\s*(?=WHERE|JOIN|$)";
-        Pattern r = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-        Matcher m = r.matcher(sqlQuery);
+        // Regular expression patterns to match table names with optional alias
+        String pattern1 = "\\b(?:FROM|JOIN)\\s+([\\w.]+)(?:\\s+AS\\s+(\\w+))?\\s*(?=WHERE|JOIN|$)";
+        String pattern2 = "SELECT \\* FROM ([\\w_]+)(?: AS ([\\w_]+))?";
 
-        if (m.find()) {
-            String tableName = m.group(1);
-            String tableAlias = m.group(2) != null ? m.group(2) : "";
+        // Compile and match pattern1
+        Pattern r1 = Pattern.compile(pattern1, Pattern.CASE_INSENSITIVE);
+        Matcher m1 = r1.matcher(sqlQuery);
+
+        if (m1.find()) {
+            String tableName = m1.group(1);
+            String tableAlias = m1.group(2) != null ? m1.group(2) : "";
 
             result.add(new Tuple2<>("table_name_extract", tableName));
             result.add(new Tuple2<>("table_alias_extract", tableAlias));
 
-            System.out.println("table name : " + tableName);
-            System.out.println("table alias : " + tableAlias);
+
+        } else {
+            // Compile and match pattern2
+            Pattern r2 = Pattern.compile(pattern2, Pattern.CASE_INSENSITIVE);
+            Matcher m2 = r2.matcher(sqlQuery);
+
+            if (m2.find()) {
+                String tableName = m2.group(1);
+                String tableAlias = m2.group(2) != null ? m2.group(2) : "";
+
+                result.add(new Tuple2<>("table_name_extract", tableName));
+                result.add(new Tuple2<>("table_alias_extract", tableAlias));
+
+
+            }
         }
 
         return sc.parallelize(result);
@@ -77,10 +93,9 @@ public class CassandraSelectLog extends Database {
                 }
             }
         }
-
-        for (String a : columns){
-            System.out.println(a);
-        }
+//        for (String a : columns){
+//            System.out.println(a);
+//        }
 
         return sc.parallelize(columns);
     }

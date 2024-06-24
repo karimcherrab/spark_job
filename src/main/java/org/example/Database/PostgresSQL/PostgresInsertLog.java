@@ -24,7 +24,7 @@ public class PostgresInsertLog  extends Database {
     @Override
     public JavaRDD<Tuple2<String, String>> extractTableName(String sqlQuery) {
         List<Tuple2<String, String>> result = new ArrayList<>();
-        String regex = "INSERT\\s+INTO\\s+\"{0,2}([^\"]+)\"{0,2}";
+        String regex = "INSERT\\s+INTO\\s+([a-zA-Z0-9_]+)";
         Pattern r = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         Matcher m = r.matcher(sqlQuery);
 
@@ -32,9 +32,9 @@ public class PostgresInsertLog  extends Database {
             result = List.of(
                     new Tuple2<>("table_name_extract", m.group(1))
             );
-
+        } else {
+            System.out.println("Failed to extractTableName");
         }
-
 
         return sc.parallelize(result);
     }
@@ -53,7 +53,9 @@ public class PostgresInsertLog  extends Database {
             String columnsStr = matcher.group(1);
 
             String[] columnsArray = columnsStr.split(",");
+
             for (String column : columnsArray) {
+                System.out.println("col name : "  +column );
                 columnList.add(column.trim().replace("\"\"" , ""));
             }
         }
