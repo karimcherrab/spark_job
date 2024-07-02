@@ -1,7 +1,6 @@
 package org.example;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
+
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
 import org.quartz.*;
@@ -20,32 +19,18 @@ public class JobScheduler {
 
     private static final Map<Integer, Scheduler> schedulers = new HashMap<>();
     private static List<Map<String, Object>> jobs ;
-    private static final String bootstrapServers = "kafka:9092";
+//    private static final String bootstrapServers = "kafka:9092";
+    private static final String bootstrapServers = "192.168.98.3:9092";
 //    private static final String bootstrapServers = "localhost:9092";
 
     public static void scheduleSparkJob(Map<String, Object> job, String bootstrapServers) throws SchedulerException, ParseException {
         Map<String, Object> conf = (Map<String, Object>) job.get("conf");
-//                    System.out.println("Conf ID: " + conf.get("id"));
-//            System.out.println("Date Start: " + conf.get("date_start"));
-//            System.out.println("Date End: " + conf.get("date_end"));
-//            System.out.println("Time: " + conf.get("time"));
+
         String dateStart = (String) conf.get("date_start");
         String dateEnd = (String) conf.get("date_end");
         String timeStart = (String) conf.get("time");
         String timeEnd = (String) conf.get("time");
 
-//        if ((int) job.get("id") == 8) {
-//            dateStart = "2024-06-21T23:00:00.000Z";
-//            dateEnd = "2024-06-24T23:00:00.000Z";
-//            timeStart = "17:28:00";
-//            timeEnd = "23:22:00";
-//
-//        } else {
-//            dateStart = "2024-06-21T23:00:00.000Z";
-//            dateEnd = "2024-06-24T23:00:00.000Z";
-//            timeStart = "20:19:00";
-//            timeEnd = "23:22:00";
-//        }
 
         System.out.println(job);
         Date startDateTime = getDateTime(dateStart, timeStart);
@@ -161,9 +146,9 @@ public class JobScheduler {
 
 
     private static void postgresListener(){
-        String url = "jdbc:postgresql://localhost:5433/siem";
+        String url = "jdbc:postgresql://localhost:5432/siem";
         String user = "postgres";
-        String password = "cherrab123";
+        String password = "karim123";
 
         try (Connection conn = DriverManager.getConnection(url, user, password)) {
             PGConnection pgConn = conn.unwrap(PGConnection.class);

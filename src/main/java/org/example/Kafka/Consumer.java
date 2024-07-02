@@ -5,8 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.example.Database.PostgresSQL.PostgresSQL;
-import org.example.Job;
+import org.example.Databases.PostgresSQL.PostgresSQL;
 
 import java.util.Arrays;
 import java.util.Map;

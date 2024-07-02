@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Map;
 
 public class Data {
-    String url_get_jobs = "http://webserver:3000/jobs/active";
-    private static final String urlGetDatabaseTypes = "http://webserver:3000/bd_type";
-    private static final String URL_POST_ALERT = "http://webserver:3000/alert";
+    String url_get_jobs = "http://localhost:3000/jobs/active";
+    private static final String urlGetDatabaseTypes = "http://localhost:3000/bd_type";
+    private static final String URL_POST_ALERT = "http://localhost:3000/alert";
     public Data() {
     }
     List<Map<String, Object>> get_jobs(){
@@ -30,6 +30,7 @@ public class Data {
             throw new RuntimeException(e);
         }
         String responseBody = httpResponse.body();
+        System.out.println(responseBody);
         ObjectMapper objectMapper = new ObjectMapper();
         List<Map<String, Object>> maps = null;
         try {
@@ -47,12 +48,14 @@ public class Data {
 
 
 
-    public String postAlert(String databaseType, String clientAddress, String database, String tables, String columns) {
+    public String postAlert(int id_job,String databaseType, String clientAddress, String database,  List<String>  tables,  List<String>  columns) {
         HttpClient client = HttpClient.newHttpClient();
         ObjectMapper objectMapper = new ObjectMapper();
-
+        System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        System.out.println(tables + "//////////////" + columns);
         // Create JSON payload
-        Map<String, String> data = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
+        data.put("id_job", id_job);
         data.put("database_type", databaseType);
         data.put("client_address", clientAddress);
         data.put("database", database);

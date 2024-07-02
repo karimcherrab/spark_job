@@ -4,18 +4,15 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.example.Database.Cassandra.Cassandra;
-import org.example.Database.DatabaseType;
-import org.example.Database.PostgresSQL.PostgresSQL;
+import org.example.Databases.Cassandra.Cassandra;
+import org.example.Databases.DatabaseType;
+import org.example.Databases.PostgresSQL.PostgresSQL;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,7 +59,7 @@ public class SparkJob implements Job {
 
             DatabaseType databaseType ;
 
-            if (topic.equals("postgress")){
+            if (topic.equals("postgres")){
                 databaseType = new PostgresSQL(job);
                 index = new int[]{2, 4, 7, 13};
 
