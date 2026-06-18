@@ -76,11 +76,10 @@ SIEM-DJEZZY/
 ├── spark-java/
 │
 │
-├── docs/
-│   │
-│   ├── Rapport_Master_SIEM.pdf
-│   │
-│   └── Rapport_PFE_SIEM.pdf
+
+│
+Rapport_Master_SIEM.pdf
+Rapport_PFE_SIEM.pdf
 │
 └── README.md
 ```
